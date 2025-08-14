@@ -1,0 +1,39 @@
+{
+    "name": "jobmetric/multi-calendar",
+    "description": "Multi-Calendar is a PHP library for converting dates between Gregorian, Jalali, Hijri, Hebrew, Buddhist, Coptic, Ethiopian, and Chinese calendars, with simple API and support for array or formatted string outputs.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "jobmetric",
+        "package",
+        "calendar",
+        "multi-calendar",
+        "date-conversion",
+        "date-formatting"
+    ],
+    "homepage": "https://doc.jobmetric.net/package/multi-calendar",
+    "authors": [
+        {
+            "name": "Majid Mohammadian",
+            "email": "majeedmohammadian@gmail.com",
+            "homepage": "https://www.linkedin.com/in/majidmohammadian/",
+            "role": "Full Stack Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-intl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "JobMetric\\MultiCalendar\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "support": {
+        "issues": "https://github.com/jobmetric/multi-calendar/issues",
+        "forum": "https://twitter.com/jobmetric",
+        "source": "https://github.com/jobmetric/multi-calendar"
+    }
+}
