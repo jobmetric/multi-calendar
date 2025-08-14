@@ -30,7 +30,8 @@
     },
     "autoload": {
         "psr-4": {
-            "JobMetric\\MultiCalendar\\": "src/"
+            "JobMetric\\MultiCalendar\\": "src/",
+            "JobMetric\\MultiCalendar\\Tests\\": "tests/"
         }
     },
     "minimum-stability": "stable",
