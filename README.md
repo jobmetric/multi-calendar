@@ -112,10 +112,99 @@ Example: `"2025/08/13"`
 > **Note**: Values for non-Gregorian calendars are calculated using the `intl` extension. Actual results may vary slightly based on leap year and leap month handling.
 
 
-## Contributing
 
-Thank you for considering contributing to the Laravel Multi Calendar! The contribution guide can be found in the [CONTRIBUTING.md](https://github.com/jobmetric/multi-calendar/blob/master/CONTRIBUTING.md).
+## Command Line Tool
+
+The package includes a command-line tool (`date-converter.sh`) that allows you to convert dates between different calendar systems directly from your terminal without writing PHP code.
+
+### Usage
+
+You can use the command-line tool in two ways:
+
+**Direct execution:**
+```bash
+date-converter.sh [date] [options]
+```
+
+**Using Composer alias:**
+```bash
+composer date-convert -- [date] [options]
+```
+
+> **Note**: When using the Composer alias, use `--` to separate Composer arguments from the script arguments.
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `date` | Optional. If not provided, current date (now) will be used. |
+
+### Options
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--date-format` | `-df` | Input calendar type (supported calendar systems) | `gregorian` |
+| `--to` | `-t` | Output calendar type (supported calendar systems) | `gregorian` |
+| `--format-input` | `-fi` | Input date string format (supported date formats), auto-detected if not provided | Auto-detect |
+| `--format-output` | `-fo` | Output date format (supported date formats) | `Y-m-d` |
+| `--timezone` | `-tz` | Convert time to specified timezone (e.g., Asia/Tehran, UTC, Europe/London) | None |
+| `--help` | `-h` | Show this help message | - |
+
+### Supported Calendar Systems
+
+- `gregorian`
+- `jalali` or `persian`
+- `hijri` or `islamic`
+- `hebrew`
+- `buddhist`
+- `coptic`
+- `ethiopian` or `ethiopic`
+- `chinese`
+
+### Supported Date Formats
+
+- `Y-m-d`
+- `d/m/Y`
+- `F d Y`
+
+### Examples
+
+**Direct execution:**
+```bash
+# Convert Gregorian to Jalali
+date-converter.sh "2025-12-20" --to jalali --format-output Y/m/d
+
+# Convert Jalali to Gregorian
+date-converter.sh "1403-10-01" --date-format jalali --to gregorian
+
+# Convert with custom input format
+date-converter.sh "20/12/2025" --format-input "d/m/Y" --to jalali
+
+# Convert with timezone
+date-converter.sh "2025-12-20 12:00:00" --timezone Asia/Tehran
+```
+
+**Using Composer alias:**
+```bash
+# Convert Gregorian to Jalali
+composer date-convert -- "2025-12-20" --to jalali --format-output Y/m/d
+
+# Convert Jalali to Gregorian
+composer date-convert -- "1403-10-01" --date-format jalali --to gregorian
+
+# Convert with custom input format
+composer date-convert -- "20/12/2025" --format-input "d/m/Y" --to jalali
+
+# Convert timezone from Brazil to Asia
+# Input: 2025-12-20 12:00:00 in America/Sao_Paulo (Brazil timezone)
+# Output: Converted to Asia/Tehran (Asia timezone)
+composer date-convert -- "2025-12-20 12:00:00" --timezone Asia/Tehran
+```
 
 ## License
 
 The MIT License (MIT). Please see [License File](https://github.com/jobmetric/multi-calendar/blob/master/LICENCE.md) for more information.
+
+## Contributing
+
+Thank you for considering contributing to the Laravel Multi Calendar! The contribution guide can be found in the [CONTRIBUTING.md](https://github.com/jobmetric/multi-calendar/blob/master/CONTRIBUTING.md).

@@ -38,6 +38,12 @@
             "JobMetric\\MultiCalendar\\Tests\\": "tests/"
         }
     },
+    "bin": [
+        "bin/date-converter.sh"
+    ],
+    "scripts": {
+        "date-convert": "bash bin/date-converter.sh"
+    },
     "minimum-stability": "stable",
     "support": {
         "issues": "https://github.com/jobmetric/multi-calendar/issues",
