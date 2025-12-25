@@ -31,13 +31,18 @@ print_help() {
   echo "  -fi, --format-input       Input date string format (supported date formats), auto-detected if not provided"
   echo "  -fo, --format-output      Output date format (supported date formats). Default: Y-m-d"
   echo "  -tz, --timezone           Convert time to specified timezone (e.g., Asia/Tehran, UTC, Europe/London)"
+  echo "  -ftz, --from-timezone     Source timezone for time conversion (e.g., UTC, Europe/London)"
+  echo "  -ttz, --to-timezone      Target timezone for time conversion (e.g., Asia/Tehran, UTC)"
   echo "  -h,  --help               Show this help message"
   echo ""
   echo "Examples:"
+  echo "  # Calendar conversion"
   echo "  $0 \"2025-12-20\" --to jalali --format-output Y/m/d"
   echo "  $0 \"1403-10-01\" --date-format jalali --to gregorian"
   echo "  $0 \"20/12/2025\" --format-input \"d/m/Y\" --to jalali"
   echo "  $0 \"29/09/1404\" --date-format jalali --format-input \"d/m/Y\" --to gregorian"
+  echo ""
+  echo "  # Timezone conversion (using --timezone for backward compatibility)"
   echo "  $0 \"2025-12-20 12:00:00\" --timezone Asia/Tehran"
 }
 
@@ -48,6 +53,8 @@ TO="gregorian"
 FORMAT_INPUT=""
 FORMAT_OUTPUT="Y-m-d"
 TIMEZONE=""
+FROM_TIMEZONE=""
+TO_TIMEZONE=""
 
 
 # Parse args
@@ -97,6 +104,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --timezone=*)
       TIMEZONE="${1#*=}"
+      shift
+      ;;
+    -ftz|--from-timezone)
+      FROM_TIMEZONE="${2:-}"
+      shift 2
+      ;;
+    --from-timezone=*)
+      FROM_TIMEZONE="${1#*=}"
+      shift
+      ;;
+    -ttz|--to-timezone)
+      TO_TIMEZONE="${2:-}"
+      shift 2
+      ;;
+    --to-timezone=*)
+      TO_TIMEZONE="${1#*=}"
       shift
       ;;
     -h|--help)
@@ -176,6 +199,8 @@ MULTI_CALENDAR_TO_CALENDAR="$TO" \
 MULTI_CALENDAR_FORMAT_INPUT="$FORMAT_INPUT" \
 MULTI_CALENDAR_FORMAT_OUTPUT="$FORMAT_OUTPUT" \
 MULTI_CALENDAR_TIMEZONE="$TIMEZONE" \
+MULTI_CALENDAR_FROM_TIMEZONE="$FROM_TIMEZONE" \
+MULTI_CALENDAR_TO_TIMEZONE="$TO_TIMEZONE" \
 php -r '
 date_default_timezone_set("Europe/London");
 require_once getenv("AUTOLOAD_FILE");
@@ -492,7 +517,9 @@ function execute(
     ?string $date = null,
     string $fromCalendar = "gregorian",
     ?string $formatInput = null,
-    ?string $timezone = null
+    ?string $timezone = null,
+    ?string $fromTimezone = null,
+    ?string $toTimezone = null
 ): string {
     try {
         $parsedDate = parseInputDate($date, $formatInput);
@@ -538,29 +565,32 @@ function execute(
         $targetMinute = $sourceMinute;
         $targetSecond = $sourceSecond;
 
-        $targetTimezone = $timezone;
+        $sourceTimezone = $fromTimezone;
+        if ($sourceTimezone === null || trim($sourceTimezone) === "") {
+            $sourceTimezone = $inputTimezone;
+        }
+        if ($sourceTimezone === null || trim($sourceTimezone) === "") {
+            $fromCalendarLower = strtolower($fromCalendar);
+            if ($fromCalendarLower === "jalali" || $fromCalendarLower === "persian") {
+                $sourceTimezone = "Asia/Tehran";
+            } elseif ($fromCalendarLower === "hijri" || $fromCalendarLower === "islamic") {
+                $sourceTimezone = "Asia/Riyadh";
+            } else {
+                $sourceTimezone = "Europe/London";
+            }
+        }
+
+        $targetTimezone = $toTimezone;
+        if ($targetTimezone === null || trim($targetTimezone) === "") {
+            $targetTimezone = $timezone;
+        }
         if ($targetTimezone === null || trim($targetTimezone) === "") {
             $targetTimezone = $inputTimezone;
         }
 
-        if ($targetTimezone !== null && trim($targetTimezone) !== "" && $inputHasTime) {
+        if ($targetTimezone !== null && trim($targetTimezone) !== "" && $inputHasTime && $sourceTimezone !== null && trim($sourceTimezone) !== "") {
             try {
                 $dateString = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $gregorianYear, $gregorianMonth, $gregorianDay, $sourceHour, $sourceMinute, $sourceSecond);
-                
-                // Determine source timezone
-                $sourceTimezone = $inputTimezone;
-                if ($sourceTimezone === null || trim($sourceTimezone) === "") {
-                    // If input timezone is not specified, infer from calendar type
-                    $fromCalendarLower = strtolower($fromCalendar);
-                    if ($fromCalendarLower === "jalali" || $fromCalendarLower === "persian") {
-                        $sourceTimezone = "Asia/Tehran";
-                    } elseif ($fromCalendarLower === "hijri" || $fromCalendarLower === "islamic") {
-                        $sourceTimezone = "Asia/Riyadh";
-                    } else {
-                        // Use default timezone (Europe/London)
-                        $sourceTimezone = "Europe/London";
-                    }
-                }
                 
                 $dt = new DateTime($dateString, new DateTimeZone($sourceTimezone));
                 $dt->setTimezone(new DateTimeZone($targetTimezone));
@@ -568,7 +598,6 @@ function execute(
                 $targetMinute = (int) $dt->format("i");
                 $targetSecond = (int) $dt->format("s");
             } catch (Exception $e) {
-                // Invalid timezone, use original time
             }
         }
 
@@ -594,10 +623,14 @@ try {
     $formatInput = getenv("MULTI_CALENDAR_FORMAT_INPUT");
     $formatOutput = getenv("MULTI_CALENDAR_FORMAT_OUTPUT");
     $timezone = getenv("MULTI_CALENDAR_TIMEZONE");
+    $fromTimezone = getenv("MULTI_CALENDAR_FROM_TIMEZONE");
+    $toTimezone = getenv("MULTI_CALENDAR_TO_TIMEZONE");
     
     $timezone = ($timezone === false || $timezone === "") ? null : $timezone;
+    $fromTimezone = ($fromTimezone === false || $fromTimezone === "") ? null : $fromTimezone;
+    $toTimezone = ($toTimezone === false || $toTimezone === "") ? null : $toTimezone;
 
-    $result = execute($toCalendar, $formatOutput, $date, $fromCalendar, $formatInput, $timezone);
+    $result = execute($toCalendar, $formatOutput, $date, $fromCalendar, $formatInput, $timezone, $fromTimezone, $toTimezone);
 
     echo $result . PHP_EOL;
     exit(0);

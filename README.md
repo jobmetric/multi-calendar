@@ -148,6 +148,8 @@ composer date-convert -- [date] [options]
 | `--format-input` | `-fi` | Input date string format (supported date formats), auto-detected if not provided | Auto-detect |
 | `--format-output` | `-fo` | Output date format (supported date formats) | `Y-m-d` |
 | `--timezone` | `-tz` | Convert time to specified timezone (e.g., Asia/Tehran, UTC, Europe/London) | None |
+| `--from-timezone` | `-ftz` | Source timezone for time conversion (e.g., UTC, Europe/London) | Auto-detect |
+| `--to-timezone` | `-ttz` | Target timezone for time conversion (e.g., Asia/Tehran, UTC) | None |
 | `--help` | `-h` | Show this help message | - |
 
 ### Supported Calendar Systems
@@ -166,6 +168,54 @@ composer date-convert -- [date] [options]
 - `Y-m-d`
 - `d/m/Y`
 - `F d Y`
+- `Y/m/d H:i:s` (with time)
+
+### Timezone Conversion
+
+The command-line tool supports timezone conversion in two ways:
+
+1. **Simple timezone conversion** (using `--timezone` for backward compatibility):
+   - Converts the input time to the specified timezone
+   - Automatically detects the source timezone from the input date or uses default based on calendar type
+
+2. **Explicit timezone conversion** (using `--from-timezone` and `--to-timezone`):
+   - Allows you to explicitly specify both source and target timezones
+   - More precise control over timezone conversion
+   - Automatically adds time to output format if timezone conversion is performed
+
+**Important Notes:**
+- When timezone conversion is performed and the input contains time, the output format will automatically include time (`H:i:s`) if not already specified
+- If no time is present in the input, timezone conversion will not add time to the output
+- Supported timezone formats: All PHP supported timezone identifiers (e.g., `UTC`, `Asia/Tehran`, `Europe/London`, `America/New_York`, `Asia/Kabul`, `America/Sao_Paulo`)
+
+**Timezone Conversion Examples:**
+
+```bash
+# Convert from UTC to Asia/Tehran
+# Input: 2025-12-20 12:00:00 (UTC)
+# Output: 2025/12/20 15:30:00 (Asia/Tehran, UTC+3:30)
+date-converter.sh "2025-12-20 12:00:00" --from-timezone UTC --to-timezone Asia/Tehran
+
+# Convert from Europe/London to Asia/Kabul
+# Input: 2025-12-20 12:00:00 (London, UTC+0 in winter)
+# Output: 2025/12/20 16:30:00 (Kabul, UTC+4:30)
+date-converter.sh "2025-12-20 12:00:00" --from-timezone Europe/London --to-timezone Asia/Kabul
+
+# Convert from America/Sao_Paulo to Asia/Tehran
+# Input: 2025-12-20 12:00:00 (Brazil, UTC-3)
+# Output: 2025/12/20 18:30:00 (Tehran, UTC+3:30)
+date-converter.sh "2025-12-20 12:00:00" --from-timezone America/Sao_Paulo --to-timezone Asia/Tehran
+
+# Convert calendar and timezone together (Gregorian to Jalali with timezone conversion)
+# Input: 2025-12-20 12:00:00 (UTC)
+# Output: 1404/09/29 15:30:00 (Jalali calendar, Asia/Tehran timezone)
+date-converter.sh "2025-12-20 12:00:00" --to jalali --from-timezone UTC --to-timezone Asia/Tehran
+
+# Convert calendar and timezone (Jalali to Gregorian with timezone conversion)
+# Input: 1404-09-29 15:30:00 (Jalali, Asia/Tehran)
+# Output: 2025/12/20 12:00:00 (Gregorian, UTC)
+date-converter.sh "1404-09-29 15:30:00" --date-format jalali --to gregorian --from-timezone Asia/Tehran --to-timezone UTC
+```
 
 ### Examples
 
@@ -180,8 +230,23 @@ date-converter.sh "1403-10-01" --date-format jalali --to gregorian
 # Convert with custom input format
 date-converter.sh "20/12/2025" --format-input "d/m/Y" --to jalali
 
-# Convert with timezone
+# Convert with timezone (backward compatibility)
 date-converter.sh "2025-12-20 12:00:00" --timezone Asia/Tehran
+
+# Convert timezone from one timezone to another
+date-converter.sh "2025-12-20 12:00:00" --from-timezone UTC --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
+
+# Convert timezone from London to Afghanistan
+date-converter.sh "2025-12-20 12:00:00" --from-timezone Europe/London --to-timezone Asia/Kabul --format-output "Y/m/d H:i:s"
+
+# Convert timezone from Brazil to Tehran
+date-converter.sh "2025-12-20 12:00:00" --from-timezone America/Sao_Paulo --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
+
+# Convert calendar and timezone together (Gregorian to Jalali with timezone conversion)
+date-converter.sh "2025-12-20 12:00:00" --to jalali --from-timezone UTC --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
+
+# Convert calendar and timezone (Jalali to Gregorian with timezone conversion)
+date-converter.sh "1404-09-29 15:30:00" --date-format jalali --to gregorian --from-timezone Asia/Tehran --to-timezone UTC --format-output "Y/m/d H:i:s"
 ```
 
 **Using Composer alias:**
@@ -195,10 +260,20 @@ composer date-convert -- "1403-10-01" --date-format jalali --to gregorian
 # Convert with custom input format
 composer date-convert -- "20/12/2025" --format-input "d/m/Y" --to jalali
 
-# Convert timezone from Brazil to Asia
-# Input: 2025-12-20 12:00:00 in America/Sao_Paulo (Brazil timezone)
-# Output: Converted to Asia/Tehran (Asia timezone)
+# Convert timezone (backward compatibility)
 composer date-convert -- "2025-12-20 12:00:00" --timezone Asia/Tehran
+
+# Convert timezone from UTC to Asia/Tehran
+composer date-convert -- "2025-12-20 12:00:00" --from-timezone UTC --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
+
+# Convert timezone from London to Afghanistan
+composer date-convert -- "2025-12-20 12:00:00" --from-timezone Europe/London --to-timezone Asia/Kabul --format-output "Y/m/d H:i:s"
+
+# Convert timezone from Brazil to Tehran
+composer date-convert -- "2025-12-20 12:00:00" --from-timezone America/Sao_Paulo --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
+
+# Convert calendar and timezone together
+composer date-convert -- "2025-12-20 12:00:00" --to jalali --from-timezone UTC --to-timezone Asia/Tehran --format-output "Y/m/d H:i:s"
 ```
 
 ## License
